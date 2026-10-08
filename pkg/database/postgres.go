@@ -21,25 +21,25 @@ func Connect() {
 	dbname := os.Getenv("DB_NAME")
 	port := os.Getenv("DB_PORT")
 
-	// config data source name (DSN)
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
+	// Konfigurasi DSN (Data Source Name)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		host, user, password, dbname, port)
 
-	// Membuka koneksi GORM
+	// Membuka koneksi menggunakan GORM
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Database gagal terhubung: %v", err)
+		log.Fatalf("Gagal terhubung ke database: %v", err)
 	}
 
-	log.Println("Database berhasil terhubung")
+	log.Println("Berhasil terhubung ke PostgreSQL!")
 
-	// Jalankan AutoMigrate untuk entitas yang ada
-	err = db.AutoMigrate(&model.Household{})
+	// Jalankan AutoMigrate untuk semua entitas
+	err = db.AutoMigrate(&model.Household{}, &model.WastePickup{}, &model.Payment{})
 	if err != nil {
-		log.Fatalf("Gagal migrasi database: %v", err)
+		log.Fatalf("Gagal melakukan migrasi database: %v", err)
 	}
 
-	log.Println("Migrasi tabel Household berhasil")
+	log.Println("Migrasi seluruh tabel berhasil!")
 
 	DB = db
 }

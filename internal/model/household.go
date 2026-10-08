@@ -13,6 +13,10 @@ type Household struct {
     Address    string    `gorm:"type:text;not null" json:"address"`
     CreatedAt  time.Time `json:"created_at"`
     UpdatedAt  time.Time `json:"updated_at"`
+
+	// Relasi
+	Pickups  []WastePickup `gorm:"foreignKey:HouseholdID" json:"pickups,omitempty"`
+	Payments []Payment     `gorm:"foreignKey:HouseholdID" json:"payments,omitempty"`
 }
 
 // tangani UUID jika kosong

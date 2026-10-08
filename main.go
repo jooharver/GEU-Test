@@ -7,26 +7,30 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/jooharver/geu-test/pkg/database"
 )
 
 func main() {
-	// load file .env
+	// Muat file .env
 	if err := godotenv.Load(); err != nil {
-		log.Println("File .env tidak ditemukan")
+		log.Println("Peringatan: file .env tidak ditemukan, menggunakan environment system")
 	}
+
+	// Inisialisasi koneksi database dan jalankan migrasi
+	database.Connect()
 
 	// Inisialisasi router Gin
 	r := gin.Default()
 
-	// Endpoint untuk tes
+	// Endpoint sederhana untuk tes
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "success",
-			"message": "API sukses berjalan",
+			"message": "API Pengumpulan Sampah Green Energi Utama Menyala!",
 		})
 	})
 
-	// ambil port dari .env
+	// Ambil PORT dari .env, default ke 8080 jika tidak ada
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
