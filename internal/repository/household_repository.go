@@ -11,6 +11,7 @@ type HouseholdRepository interface {
 	Create(household *model.Household) error
 	FindAll() ([]model.Household, error)
 	FindByID(id uuid.UUID) (*model.Household, error)
+	Delete(id uuid.UUID) error
 }
 
 type householdRepository struct {
@@ -36,4 +37,8 @@ func (r *householdRepository) FindByID(id uuid.UUID) (*model.Household, error) {
 	// Preload digunakan agar saat mengambil data warga, riwayat sampah dan pembayarannya ikut ditarik
 	err := r.db.Preload("Pickups").Preload("Payments").First(&household, "id = ?", id).Error
 	return &household, err
+}
+
+func (r *householdRepository) Delete(id uuid.UUID) error {
+	return r.db.Unscoped().Delete(&model.Household{}, "id = ?", id).Error
 }

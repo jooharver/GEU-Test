@@ -6,9 +6,11 @@ import(
 	   "gorm.io/gorm"
 )
 
-type WastePickupRepository interface{
+type WastePickupRepository interface {
 	Create(pickup *model.WastePickup) error
 	FindByHouseholdID(householdID uuid.UUID) ([]model.WastePickup, error)
+	FindByID(id uuid.UUID) (*model.WastePickup, error)
+	Update(pickup *model.WastePickup) error
 }
 
 type wastePickupRepository struct{
@@ -28,5 +30,15 @@ func (r *wastePickupRepository) FindByHouseholdID(householdID uuid.UUID) ([]mode
 	// Mencari semua data sampah berdasarkan ID warga
 	err := r.db.Where("household_id = ?", householdID).Find(&pickups).Error
 	return pickups, err
+}
+
+func (r *wastePickupRepository) FindByID(id uuid.UUID) (*model.WastePickup, error) {
+	var pickup model.WastePickup
+	err := r.db.First(&pickup, "id = ?", id).Error
+	return &pickup, err
+}
+
+func (r *wastePickupRepository) Update(pickup *model.WastePickup) error {
+	return r.db.Save(pickup).Error
 }
 

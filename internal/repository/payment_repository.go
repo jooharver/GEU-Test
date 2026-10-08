@@ -11,6 +11,7 @@ type PaymentRepository interface {
 	FindByID(id uuid.UUID) (*model.Payment, error)
 	Update(payment *model.Payment) error
 	FindByHouseholdID(householdID uuid.UUID) ([]model.Payment, error)
+	FindAll() ([]model.Payment, error)
 }
 
 type paymentRepository struct {
@@ -39,5 +40,11 @@ func (r *paymentRepository) Update(payment *model.Payment) error {
 func (r *paymentRepository) FindByHouseholdID(householdID uuid.UUID) ([]model.Payment, error) {
 	var payments []model.Payment
 	err := r.db.Where("household_id = ?", householdID).Find(&payments).Error
+	return payments, err
+}
+
+func (r *paymentRepository) FindAll() ([]model.Payment, error) {
+	var payments []model.Payment
+	err := r.db.Find(&payments).Error
 	return payments, err
 }
