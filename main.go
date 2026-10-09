@@ -13,52 +13,65 @@ import (
 )
 
 func main() {
-	// 1. Muat config environment
+	// load .env
 	if err := godotenv.Load(); err != nil {
-		log.Println("Info: file .env gak ada, lanjut pake variabel environment dari system")
+		log.Println("Info: file .env tidak ditemukan, menggunakan environment variable dari sistem.")
 	}
 
-	// 2. Konek ke database & jalanin AutoMigrate
+	// konek database
 	database.Connect()
 
-	// 3. Setup Layer Repository (Tangan DB)
+	// buat seeder data
+	database.Seed(database.DB)
+
+	// setup layer repository untuk akses database
 	householdRepo := repository.NewHouseholdRepository(database.DB)
 	pickupRepo := repository.NewWastePickupRepository(database.DB)
 	paymentRepo := repository.NewPaymentRepository(database.DB)
+	reportRepo := repository.NewReportRepository(database.DB)
 
-	// 4. Setup Layer Service (Otak Logika)
+	// setup layer service
 	householdService := service.NewHouseholdService(householdRepo)
-	// perhatiin: pickup service butuh payment repo juga buat generate tagihan otomatis pas sampah selesai diambil
-	pickupService := service.NewWastePickupService(pickupRepo, paymentRepo) 
+	pickupService := service.NewWastePickupService(pickupRepo, paymentRepo)
 	paymentService := service.NewPaymentService(paymentRepo)
+	reportService := service.NewReportService(reportRepo)
 
-	// 5. Setup Layer Handler (Penerima Request HTTP)
+	// setup layer handler untuk request-response HTTP
 	householdHandler := handler.NewHouseholdHandler(householdService)
 	pickupHandler := handler.NewWastePickupHandler(pickupService)
 	paymentHandler := handler.NewPaymentHandler(paymentService)
+	reportHandler := handler.NewReportHandler(reportService)
 
-	// 6. Inisialisasi Router Gin
+	// inisialisasi router Gin
 	r := gin.Default()
 
-	// Buka akses publik ke folder uploads biar gambar bukti bayar bisa diakses dari browser
+	// Buka akses publik folder uploads biar gambar bukti bayar bisa diakses dari browser
 	r.Static("/uploads", "./uploads")
 
-	// 7. Daftarin semua routing API
+	// mendaftarkan semua routing API
 	api := r.Group("/api")
 	{
-		// Warga / Household
+		// Warga/Household
 		api.POST("/households", householdHandler.Create)
 		api.GET("/households", householdHandler.GetAll)
 		api.GET("/households/:id", householdHandler.GetByID)
 		api.DELETE("/households/:id", householdHandler.Delete)
 
-		// Sampah / Waste Pickup
+		// Sampah/Waste Pickup
 		api.POST("/pickups", pickupHandler.Create)
+		api.GET("/pickups", pickupHandler.GetAll)
+		api.GET("/pickups/:id", pickupHandler.GetByID)      
+		api.DELETE("/pickups/:id", pickupHandler.Delete)   
 		api.PUT("/pickups/:id/schedule", pickupHandler.Schedule)
 		api.PUT("/pickups/:id/complete", pickupHandler.Complete)
 
-		// Pembayaran / Payment
+		// Pembayaran/Payment
+		api.GET("/payments", paymentHandler.GetAll)
 		api.PUT("/payments/:id/confirm", paymentHandler.Confirm)
+
+		// Laporan/Reports
+		api.GET("/reports/waste-summary", reportHandler.WasteSummary)
+		api.GET("/reports/payment-summary", reportHandler.PaymentSummary)
 	}
 
 	port := os.Getenv("PORT")
