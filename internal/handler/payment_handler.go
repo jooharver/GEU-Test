@@ -15,46 +15,63 @@ type PaymentHandler struct {
 	service service.PaymentService
 }
 
+// Inisialisasi payment handler baru
 func NewPaymentHandler(s service.PaymentService) *PaymentHandler {
 	return &PaymentHandler{service: s}
 }
 
-// PUT /api/payments/:id/confirm
+// endpoint untuk memvalidasi pembayaran dengan upload struk
 func (h *PaymentHandler) Confirm(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Format ID tagihan gak valid"})
+	rawParam := c.Param("id")
+	
+	paymentID, parseErr := uuid.Parse(rawParam)
+	if parseErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Gagal memuat tagihan. Pastikan formatnya menggunakan UUID."})
 		return
 	}
 
-	// 1. Nangkep file gambar dari form-data Postman (pake key "receipt")
-	file, err := c.FormFile("receipt")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "File bukti bayar wajib diupload (pake key form-data 'receipt')"})
+	// Ekstrak lampiran gambar bukti transfer
+	uploadedFile, fileErr := c.FormFile("receipt")
+	if fileErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Lampiran 'receipt' tidak ditemukan. Mohon sertakan bukti transfer."})
 		return
 	}
 
-	// 2. Bikin nama file unik pake kombinasi angka timestamp waktu sekarang
-	// Biar kalo ada warga ngupload file namanya "bukti.jpg" secara bersamaan, filenya gak saling nimpa
-	fileName := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
-	uploadPath := filepath.Join("uploads", fileName)
+	// Konstruksi nama unik menggunakan timestamp untuk mencegah redundan nama file
+	timestampSuffix := time.Now().Unix()
+	safeFileName := fmt.Sprintf("%d_%s", timestampSuffix, filepath.Base(uploadedFile.Filename))
+	destinationPath := filepath.Join("uploads", safeFileName)
 
-	// 3. Simpen file fisiknya beneran ke folder lokal /uploads/ (dibantu otomatis sama Gin)
-	if err := c.SaveUploadedFile(file, uploadPath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Aduh, gagal nyimpen file ke server lokal"})
+	// Tulis file gambar ke storage server lokal
+	if saveErr := c.SaveUploadedFile(uploadedFile, destinationPath); saveErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Terdapat kendala saat menyimpan berkas bukti bayar ke direktori."})
 		return
 	}
 
-	// 4. Update status di database lewat Service
-	fileURL := "/" + uploadPath
-	err = h.service.ConfirmPayment(id, fileURL)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Update record pembayaran menggunakan service layer
+	publicFileURL := "/" + destinationPath
+	srvErr := h.service.ConfirmPayment(paymentID, publicFileURL)
+	if srvErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": srvErr.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":     "Pembayaran sukses dikonfirmasi!",
-		"receipt_url": fileURL,
+		"message":     "Verifikasi pembayaran berhasil diselesaikan.",
+		"receipt_url": publicFileURL,
+	})
+}
+
+// Endpoint rekapitulasi semua riwayat tagihan
+func (h *PaymentHandler) GetAll(c *gin.Context) {
+	paymentList, fetchErr := h.service.GetAllPayments()
+	if fetchErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Sistem gagal memuat daftar transaksi pembayaran."})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Daftar transaksi tagihan berhasil ditarik.",
+		"data":    paymentList,
 	})
 }

@@ -8,102 +8,99 @@ import (
 	"github.com/jooharver/geu-test/internal/service"
 )
 
-// Ini DTO (Data Transfer Object) buat nangkep JSON dari Postman
-// tag binding:"required" itu versi otomatisnya $request->validate() di Laravel
+// Menyimpan struktur payload untuk pendaftaran warga baru
 type createHouseholdRequest struct {
 	OwnerName string `json:"owner_name" binding:"required"`
 	Address   string `json:"address" binding:"required"`
+	Phone     string `json:"phone" binding:"required"`
+	Email     string `json:"email" binding:"required"`
 }
 
 type HouseholdHandler struct {
 	service service.HouseholdService
 }
 
-// Constructor buat inject service-nya
+// Inisialisasi handler untuk entitas household(warga)
 func NewHouseholdHandler(s service.HouseholdService) *HouseholdHandler {
 	return &HouseholdHandler{service: s}
 }
 
-// POST /api/households
+// Menangani pembuatan data warga
 func (h *HouseholdHandler) Create(c *gin.Context) {
-	var req createHouseholdRequest
+	var payload createHouseholdRequest
 
-	// Cek apakah JSON yang dikirim user sesuai sama struct di atas
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Format inputan salah atau ada data yang kosong"})
+	// Pengecekan payload inputan dari client
+	if bindErr := c.ShouldBindJSON(&payload); bindErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Format inputan salah atau ada data wajib yang masih kosong"})
 		return
 	}
 
-	// Lempar ke service buat dieksekusi
-	household, err := h.service.CreateHousehold(req.OwnerName, req.Address)
-	if err != nil {
-		// Kalo service balikin error (misal nama kosong), tampilin errornya
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// Transfer pendaftaran ke layer service
+	household, srvErr := h.service.CreateHousehold(payload.OwnerName, payload.Email, payload.Phone, payload.Address)
+	if srvErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": srvErr.Error()})
 		return
 	}
 
-	// Kalo sukses, balikin response 201 (Created)
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Data warga berhasil ditambahkan",
+		"message": "Registrasi warga berhasil.",
 		"data":    household,
 	})
 }
 
-// GET /api/households
+// Mengambil keseluruhan data warga yang terdaftar
 func (h *HouseholdHandler) GetAll(c *gin.Context) {
-	households, err := h.service.GetAllHouseholds()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal ngambil data warga"})
+	households, fetchErr := h.service.GetAllHouseholds()
+	if fetchErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Terjadi kesalahan saat memuat data warga dari sistem"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Berhasil ngambil list warga",
+		"message": "Data warga berhasil dimuat.",
 		"data":    households,
 	})
 }
 
-// GET /api/households/:id
+// Menarik data satu warga spesifik berdasarkan ID
 func (h *HouseholdHandler) GetByID(c *gin.Context) {
-	// Ambil id dari parameter URL
-	idParam := c.Param("id")
+	rawID := c.Param("id")
 	
-	// Ubah string id jadi format UUID
-	id, err := uuid.Parse(idParam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Format ID gak valid nih, harus UUID"})
+	householdID, parseErr := uuid.Parse(rawID)
+	if parseErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid. Harap periksa kembali."})
 		return
 	}
 
-	household, err := h.service.GetHouseholdByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Data warga gak ketemu"})
+	household, findErr := h.service.GetHouseholdByID(householdID)
+	if findErr != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Data warga tidak ditemukan di sistem"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Data warga ditemukan",
+		"message": "Arsip warga ditemukan.",
 		"data":    household,
 	})
 }
 
-// DELETE /api/households/:id
+// Menghapus data warga berdasarkan ID
 func (h *HouseholdHandler) Delete(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := uuid.Parse(idParam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Format ID gak valid"})
+	rawID := c.Param("id")
+	
+	householdID, parseErr := uuid.Parse(rawID)
+	if parseErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Format UUID tidak sesuai standar."})
 		return
 	}
 
-	// Panggil fitur delete yang baru aja kita bikin di service tadi
-	err = h.service.DeleteHousehold(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	delErr := h.service.DeleteHousehold(householdID)
+	if delErr != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": delErr.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Data warga berhasil dihapus selamanya",
+		"message": "Data warga sudah dihapus dari sistem.",
 	})
 }
