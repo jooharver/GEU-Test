@@ -12,6 +12,7 @@ type PaymentRepository interface {
 	Update(payment *model.Payment) error
 	FindByHouseholdID(householdID uuid.UUID) ([]model.Payment, error)
 	FindAll() ([]model.Payment, error)
+	GetAllPayments() ([]model.Payment, error)
 }
 
 type paymentRepository struct {
@@ -33,7 +34,7 @@ func (r *paymentRepository) FindByID(id uuid.UUID) (*model.Payment, error) {
 }
 
 func (r *paymentRepository) Update(payment *model.Payment) error {
-	// Save akan melakukan UPDATE data yang sudah ada berdasarkan Primary Key (ID)
+	// Save akan mengupdate data yg sudah ada
 	return r.db.Save(payment).Error
 }
 
@@ -44,6 +45,12 @@ func (r *paymentRepository) FindByHouseholdID(householdID uuid.UUID) ([]model.Pa
 }
 
 func (r *paymentRepository) FindAll() ([]model.Payment, error) {
+	var payments []model.Payment
+	err := r.db.Find(&payments).Error
+	return payments, err
+}
+
+func (r *paymentRepository) GetAllPayments() ([]model.Payment, error) {
 	var payments []model.Payment
 	err := r.db.Find(&payments).Error
 	return payments, err

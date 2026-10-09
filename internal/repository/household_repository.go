@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Menggunakan Interface adalah praktik standar Clean Architecture
+// Membuat interface
 type HouseholdRepository interface {
 	Create(household *model.Household) error
 	FindAll() ([]model.Household, error)
