@@ -59,7 +59,7 @@ API ini dilengkapi dengan dokumentasi Postman yang sudah mencakup seluruh endpoi
 
 * **Postman Published Docs:** [Lihat Dokumentasi Lengkap API PT GEU di Sini](https://documenter.getpostman.com/view/51813315/2sBYHQ1hwf)
 
-* **Postman Collection (Offline):** Anda juga dapat mengimpor file `geu_waste_management.postman_collection.json` yang terdapat pada root direktori proyek ini ke dalam workspace Postman atau Insomnia Anda.
+* **Postman Collection (Offline):** Anda juga dapat mengimpor file `geu_postman_collection.json` yang terdapat pada root direktori proyek ini ke dalam workspace Postman atau Insomnia Anda.
 
 ## Contoh Penggunaan API
 
@@ -88,12 +88,12 @@ Berikut adalah beberapa contoh penggunaan endpoint utama pada aplikasi ini:
         "owner_name": "Joko Anwar",
         ...
     },
-    "message": "Data warga berhasil ditambahkan"
+    "message": "Registrasi warga berhasil."
 }
 
 ```
 
-### 2. Meminta Pengambilan Sampah
+### 2. Request Pengambilan Sampah
 
 **Request (POST `/api/pickups`):**
 
@@ -117,7 +117,7 @@ Berikut adalah beberapa contoh penggunaan endpoint utama pada aplikasi ini:
         "status": "pending",
         "safety_check": true
     },
-    "message": "Permintaan pickup berhasil dibuat"
+    "message": "Permintaan pickup berhasil dibuat."
 }
 
 ```
@@ -137,7 +137,7 @@ Berikut adalah beberapa contoh penggunaan endpoint utama pada aplikasi ini:
 
 ```
 {
-    "message": "Status pickup berhasil diubah jadi scheduled"
+    "message": "Penjadwalan berhasil dikonfirmasi."
 }
 
 ```
@@ -157,7 +157,8 @@ Endpoint ini menggunakan `multipart/form-data` untuk menerima file gambar bukti 
 
 ```
 {
-    "message": "Pembayaran berhasil dikonfirmasi"
+    "message": "Verifikasi pembayaran berhasil diselesaikan."
+    ...
 }
 
 ```
