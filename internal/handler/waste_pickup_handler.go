@@ -43,7 +43,7 @@ func (h *WastePickupHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Tiket pickup sampah berhasil diterbitkan.",
+		"message": "Permintaan pickup berhasil dibuat.",
 		"data":    newPickup,
 	})
 }
