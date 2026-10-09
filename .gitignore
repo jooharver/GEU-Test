@@ -1,14 +1,12 @@
 # Binaries
-/bin
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+main
 
-# Uploads directory
-/uploads/*
-!/uploads/.gitkeep
-
-# Environment variables
+# Env variables
 .env
+
+# Database volume
+pgdata/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep

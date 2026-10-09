@@ -1,0 +1,298 @@
+{
+  "info": {
+    "_postman_id": "3fe9c486-631c-471f-a9bd-214e3721dc43",
+    "name": "PT GEU Copy",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51813315",
+    "_collection_link": "https://go.postman.co/collection/51813315-3fe9c486-631c-471f-a9bd-214e3721dc43?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Warga (Household)",
+      "item": [
+        {
+          "name": "Get All Households",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/households",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "households"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Household by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/households/MASUKAN_ID_DISINI",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "households",
+                "MASUKAN_ID_DISINI"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Household",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Joko Anwar\",\n    \"address\": \"Jl. Anggrek No. 99, Malang\",\n    \"email\": \"joko@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/households",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "households"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Household",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/households/MASUKAN_ID_DISINI",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "households",
+                "MASUKAN_ID_DISINI"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Pengambilan Sampah (Pickup)",
+      "item": [
+        {
+          "name": "Create Pickup",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"household_id\": \"MASUKAN_ID_WARGA_DISINI\",\n    \"type\": \"electronic\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pickups",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pickups"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Schedule Pickup",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"pickup_date\": \"2026-10-15T10:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pickups/MASUKAN_ID_PICKUP_DISINI/schedule",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pickups",
+                "MASUKAN_ID_PICKUP_DISINI",
+                "schedule"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Pickup",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/pickups/MASUKAN_ID_PICKUP_DISINI/complete",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pickups",
+                "MASUKAN_ID_PICKUP_DISINI",
+                "complete"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Pembayaran (Payment)",
+      "item": [
+        {
+          "name": "Get All Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/payments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Payment",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "receipt",
+                  "type": "file",
+                  "value": null
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/payments/MASUKAN_ID_TAGIHAN_DISINI/confirm",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "payments",
+                "MASUKAN_ID_TAGIHAN_DISINI",
+                "confirm"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Pelaporan (Report)",
+      "item": [
+        {
+          "name": "Waste Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/reports/waste-summary",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "reports",
+                "waste-summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Payment Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/reports/payment-summary",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "reports",
+                "payment-summary"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
