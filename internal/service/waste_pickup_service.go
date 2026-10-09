@@ -9,10 +9,14 @@ import (
 	"github.com/jooharver/geu-test/internal/repository"
 )
 
+//interface
 type WastePickupService interface {
 	CreatePickup(householdID uuid.UUID, wasteType string, safetyCheck bool) (*model.WastePickup, error)
 	SchedulePickup(id uuid.UUID, pickupDate time.Time) error
 	CompletePickup(id uuid.UUID) error
+	GetAllPickups() ([]model.WastePickup, error)
+	GetPickupByID(id uuid.UUID) (*model.WastePickup, error)
+	DeletePickup(id uuid.UUID) error
 }
 
 type wastePickupService struct {
@@ -29,15 +33,15 @@ func NewWastePickupService(pr repository.WastePickupRepository, payR repository.
 }
 
 func (s *wastePickupService) CreatePickup(householdID uuid.UUID, wasteType string, safetyCheck bool) (*model.WastePickup, error) {
-	// cek aturan #1:gak boleh ada utang pending payment
+	// cek aturan 1:gak boleh ada utang pending payment
 	payments, err := s.paymentRepo.FindByHouseholdID(householdID)
 	if err != nil {
-		return nil, errors.New("gagal ngecek data pembayaran")
+		return nil, errors.New("gagal mengecek data pembayaran")
 	}
 
 	for _, p := range payments {
 		if p.Status == "pending" {
-			return nil, errors.New("gabisa request pickup, masih ada tagihan pending bos")
+			return nil, errors.New("tidak bisa request pickup, masih ada tagihan pending")
 		}
 	}
 
@@ -60,15 +64,15 @@ func (s *wastePickupService) SchedulePickup(id uuid.UUID, pickupDate time.Time) 
 	// ambil data pickup nya
 	pickup, err := s.pickupRepo.FindByID(id)
 	if err != nil {
-		return errors.New("data pickup gak ketemu")
+		return errors.New("data pickup tidak ditemukan")
 	}
 
-	// cek aturan #2: harus dari status pending
+	// cek aturan 2: harus dari status pending
 	if pickup.Status != "pending" {
-		return errors.New("pickup cuma bisa dijadwalin kalo statusnya masih pending")
+		return errors.New("pickup cuma bisa dijadwalkan kalau statusnya masih pending")
 	}
 
-	// cek aturan #3: kalo elektronik, safety check wajib true
+	// cek aturan 3: kalo elektronik, safety check wajib true
 	if pickup.Type == "electronic" && !pickup.SafetyCheck {
 		return errors.New("sampah elektronik wajib lolos safety check dulu")
 	}
@@ -82,7 +86,7 @@ func (s *wastePickupService) SchedulePickup(id uuid.UUID, pickupDate time.Time) 
 func (s *wastePickupService) CompletePickup(id uuid.UUID) error {
 	pickup, err := s.pickupRepo.FindByID(id)
 	if err != nil {
-		return errors.New("data pickup gak ketemu")
+		return errors.New("data pickup tidak ditemukan")
 	}
 
 	pickup.Status = "completed"
@@ -93,7 +97,7 @@ func (s *wastePickupService) CompletePickup(id uuid.UUID) error {
 		return err
 	}
 
-	// cek aturan #4: hitung tarif buat digenerate jadi payment
+	// cek aturan 4: hitung tarif buat digenerate jadi payment
 	var amount float64
 	if pickup.Type == "electronic" {
 		amount = 100000
@@ -111,4 +115,28 @@ func (s *wastePickupService) CompletePickup(id uuid.UUID) error {
 	}
 
 	return s.paymentRepo.Create(newPayment)
+}
+
+func (s *wastePickupService) GetAllPickups() ([]model.WastePickup, error) {
+	return s.pickupRepo.FindAll()
+}
+
+func (s *wastePickupService) GetPickupByID(id uuid.UUID) (*model.WastePickup, error) {
+	return s.pickupRepo.FindByID(id)
+}
+
+func (s *wastePickupService) DeletePickup(id uuid.UUID) error {
+	// 1. Cari data pickup-nya dulu
+	pickup, err := s.pickupRepo.FindByID(id)
+	if err != nil {
+		return errors.New("data pickup tidak ditemukan")
+	}
+
+	// 2. Jangan izinkan hapus kalau statusnya sudah completed
+	if pickup.Status == "completed" {
+		return errors.New("tidak dapat menghapus permintaan yang sudah diselesaikan dan menjadi tagihan")
+	}
+
+	// 3. Hapus jika aman
+	return s.pickupRepo.Delete(id)
 }

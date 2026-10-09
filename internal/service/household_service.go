@@ -9,7 +9,7 @@ import (
 )
 
 type HouseholdService interface {
-	CreateHousehold(ownerName, address string) (*model.Household, error)
+	CreateHousehold(ownerName, email, phone, address string) (*model.Household, error)
 	GetAllHouseholds() ([]model.Household, error)
 	GetHouseholdByID(id uuid.UUID) (*model.Household, error)
 	DeleteHousehold(id uuid.UUID) error
@@ -19,13 +19,13 @@ type householdService struct {
 	repo repository.HouseholdRepository
 }
 
-// Constructor, wajib di-inject repo-nya pas dipanggil nanti
+// Constructor
 func NewHouseholdService(repo repository.HouseholdRepository) HouseholdService {
 	return &householdService{repo}
 }
 
 // Fungsi nambah warga baru
-func (s *householdService) CreateHousehold(ownerName, address string) (*model.Household, error) {
+func (s *householdService) CreateHousehold(ownerName, email, phone, address string) (*model.Household, error) {
 	if ownerName == "" {
 		return nil, errors.New("nama pemilik wajib diisi")
 	}
@@ -36,6 +36,8 @@ func (s *householdService) CreateHousehold(ownerName, address string) (*model.Ho
 	// prepare struct modelnya
 	household := &model.Household{
 		OwnerName: ownerName,
+		Email:     email,
+		Phone:     phone,
 		Address:   address,
 	}
 
@@ -64,12 +66,12 @@ func (s *householdService) GetHouseholdByID(id uuid.UUID) (*model.Household, err
 
 // Fungsi hapus warga by id
 func (s *householdService) DeleteHousehold(id uuid.UUID) error {
-	// pastiin dulu orangnya beneran ada di db
+	// pastikan orangnya ada di db
 	_, err := s.repo.FindByID(id)
 	if err != nil {
 		return errors.New("Tidak bisa dihapus, data warga tidak ditemukan")
 	}
 
-	// kalo ketemu, langsung eksekusi hapus lewat repo
+	// kalo ketemu, langsung eksekusi hapus
 	return s.repo.Delete(id)
 }
